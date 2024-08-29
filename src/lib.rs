@@ -1,0 +1,233 @@
+use std::collections::HashMap;
+use std::fs::{self};
+use std::path::Path;
+use std::{env, io};
+
+// Todo: better errors, put code into functions, better variable names
+//
+// maybe just collect times into stages not country::stage
+// Australia_Stage_1_Forward_Dry_GroupA:127043:2
+//
+// build loading bar lol
+
+#[derive(Debug, Clone)]
+pub struct Stage {
+    name: String,
+    time: u32,
+    car: u8,
+    player_name: String,
+}
+
+#[derive(Clone)]
+pub struct Player {
+    name: String,
+    pub score: u32,
+    stage_rankings: Vec<u16>, // maybe?
+    stages: HashMap<String, Stage>,
+}
+
+impl Player {
+    pub fn new(name: String, stages: HashMap<String, Stage>) -> Player {
+        Player {
+            name,
+            score: 0,
+            stage_rankings: Vec::new(),
+            stages,
+        }
+    }
+}
+impl Stage {
+    pub fn from_line(line: &str, player_name: &str) -> Option<Self> {
+        let parts: Vec<&str> = line.split(':').collect();
+        if parts.len() == 3 {
+            let name = parts[0].to_string();
+            let time = parts[1].parse().ok()?;
+            let car = parts[2].parse().ok()?;
+            Some(Stage {
+                name,
+                time,
+                car,
+                player_name: player_name.to_string(),
+            })
+        } else {
+            None
+        }
+    }
+}
+
+pub fn read_stages_from_file(path: &Path, player_name: &str) -> io::Result<HashMap<String, Stage>> {
+    let mut stages = HashMap::new();
+    let content = fs::read_to_string(path)?;
+    for line in content.lines() {
+        if let Some(stage) = Stage::from_line(line, player_name) {
+            stages.insert(stage.name.clone(), stage);
+        }
+    }
+    Ok(stages)
+    // or return user struct?
+}
+
+pub fn load_users_from_dir(dir: &Path) -> io::Result<Vec<Player>> {
+    //let mut users = HashMap::new();
+    let mut users: Vec<Player> = Vec::new();
+
+    for entry in fs::read_dir(dir)? {
+        let entry = entry?;
+        let path = entry.path();
+
+        if path.extension().and_then(|ext| ext.to_str()) == Some("txt") {
+            let file_name = path
+                .file_stem()
+                .and_then(|name| name.to_str())
+                .unwrap_or("Unknown")
+                .to_string();
+            // file_name should be Player name
+            dbg!(&file_name);
+            // stages: HashMap<String, Stage>
+            if let Ok(stages) = read_stages_from_file(&path, &file_name) {
+                //users.insert(file_name, performance_map);
+                //let player: Player = Player::new(file_name, stages)
+                users.push(Player::new(file_name, stages))
+            }
+        }
+    }
+    Ok(users)
+}
+
+pub fn compare_users(users: &HashMap<String, HashMap<String, Stage>>) {
+    // Example: Compare all users against the first user found
+    if let Some((first_user, first_performances)) = users.iter().next() {
+        println!("Comparing other users against: {}", first_user);
+
+        for (other_user, other_performances) in users.iter() {
+            if first_user == other_user {
+                continue; // Skip comparison with the same user
+            }
+
+            println!("Comparing {} with {}", first_user, other_user);
+
+            for (track, perf_a) in first_performances {
+                if let Some(perf_b) = other_performances.get(track) {
+                    println!(
+                        "Track {}: {}'s time = {}, {}'s time = {}",
+                        track, first_user, perf_a.time, other_user, perf_b.time
+                    );
+                }
+            }
+        }
+    }
+}
+
+// best rust code ever
+pub fn load_all_stages() -> Vec<String> {
+    let contents = fs::read_to_string("Leaderboards.txt").unwrap();
+    let lines: Vec<String> = contents.lines().map(String::from).collect();
+    let mut vec_names: Vec<String> = Vec::new();
+    for line in lines {
+        let parts: Vec<&str> = line.split(":").collect();
+        vec_names.push(parts[0].to_owned());
+    }
+    vec_names
+}
+
+// build vectors of stages across all users
+pub fn build_stage_vectors(players: &[Player]) -> HashMap<String, Vec<Stage>> {
+    let mut stage_vectors: HashMap<String, Vec<Stage>> = HashMap::new();
+
+    for player in players {
+        for stage in player.stages.values() {
+            stage_vectors
+                .entry(stage.name.clone())
+                .or_insert_with(Vec::new)
+                .push(stage.clone());
+        }
+    }
+    stage_vectors
+}
+
+// rank users based on their stage times
+pub fn rank_stages_old(stage_vectors: &mut HashMap<String, Vec<&Stage>>) {
+    for (stage_name, stages) in stage_vectors.iter_mut() {
+        stages.sort_by_key(|stage| stage.time);
+
+        println!("Rankings for Stage: {}", stage_name);
+        for (rank, stage) in stages.iter().enumerate() {
+            println!(
+                "Rank {}: Player {} with time {}",
+                rank + 1,
+                stage.player_name,
+                convert_ms_to_string(stage.time)
+            );
+        }
+        println!();
+    }
+}
+
+pub fn rank_stages(stage_vectors: &mut HashMap<String, Vec<Stage>>, players: &mut Vec<Player>) {
+    for (_stage_name, stages) in stage_vectors.iter_mut() {
+        // Sort the stages by time (ascending)
+        stages.sort_by_key(|stage| stage.time);
+
+        println!("Rankings for Stage: {}", &_stage_name);
+        for (rank, stage) in stages.iter().enumerate() {
+            println!(
+                "Rank {}, player {}, time {}",
+                rank + 1,
+                stage.player_name,
+                stage.time
+            );
+        }
+
+        if let Some(fastest_stage) = stages.first() {
+            let fastest_time = fastest_stage.time as f64;
+
+            // Update player scores based on their ranking and new scoring algorithm
+            for (pos, stage) in stages.iter().enumerate() {
+                let rank: i32 = pos as i32 + 1;
+                let player_time = stage.time as f64;
+
+                // Apply the new scoring formula
+                let score = 1000.0 * (fastest_time / player_time) * 0.988f64.powi(rank - 1);
+
+                // Find the corresponding player and update their score
+                if let Some(player) = players
+                    //.clone()
+                    .iter_mut()
+                    .find(|p| p.name == stage.player_name)
+                {
+                    //let score_int = score as u8;
+                    player.score += score as u32;
+                }
+            }
+        }
+    }
+}
+
+pub fn build_leaderboard(players: &mut Vec<Player>) {
+    // Sort players by score in descending order
+    players.sort_by(|a, b| {
+        b.score
+            .partial_cmp(&a.score)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
+
+    println!("\nFinal Leaderboard:");
+    for (rank, player) in players.iter().enumerate() {
+        println!(
+            "Rank {}: {} with {:.2} points",
+            rank + 1,
+            player.name,
+            player.score
+        );
+    }
+}
+
+pub fn convert_ms_to_string(ms: u32) -> String {
+    let total_seconds = ms / 1000;
+    let minutes = total_seconds / 60;
+    let seconds = total_seconds % 60;
+    let milliseconds = ms % 1000;
+
+    let string = format!("{minutes:02}:{seconds:02}:{milliseconds:03}");
+    string
+}
