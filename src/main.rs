@@ -2,6 +2,7 @@ use aor_ranks::*;
 use std::collections::HashMap;
 use std::env;
 use std::io;
+use std::io::Write;
 use std::path::Path;
 
 fn main() -> io::Result<()> {
@@ -14,30 +15,20 @@ fn main() -> io::Result<()> {
 
     let dir = &args[1];
     let dir_path = Path::new(&dir);
-    //println!("{:?}", &dir_path);
 
+    print!("loading files..");
+    std::io::stdout().flush().expect("Failed to flush stdout");
+
+    // default path:
     //let dir_path = Path::new("./user_files");
     let mut players: Vec<Player> = load_users_from_dir(dir_path)?;
-    let _all_stages = load_all_stages();
+    println!("{} players", players.len());
 
-    let mut stage_vectors: HashMap<String, Vec<Stage>> = build_stage_vectors(&players);
-    //dbg!(&stage_vectors);
+    let mut stages: HashMap<String, Vec<Stage>> = collect_stages_from_players(&players);
 
-    rank_stages(&mut stage_vectors, &mut players);
-
+    //dbg!(&stages);
+    rank_stages(&mut stages, &mut players);
     build_leaderboard(&mut players);
-    //    for (stage, vec) in stage_vectors {
-    //       println!("{:?} , {:?}", stage, vec);
-    //  }
-
-    // Vec<Player>
-    // Player {name, HashMap<String, Stage>}
-    // String: Stage_name
-    // Stage {stage_name, time, car}
-
-    //println!("{}: {:?}", user.name, user.stages);
-    // failx: {"Finland_Stage_1_Forward_Dry_60s": Stage { name: "Finland_Stage_1_Forward_Dry_60s", time: 85482, car: 0 }}
-    // maybe only use HashMap<stage_name, stage {time, car}> / or just a vec like Player: vec<Stage>
 
     Ok(())
 }
