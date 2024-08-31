@@ -5,11 +5,9 @@ use std::io;
 use std::path::Path;
 
 fn main() -> io::Result<()> {
-    // read in user data
-    // path : ./target/debug/user_files
     let args: Vec<String> = env::args().collect();
 
-    // for user inpout directory
+    // for user input directory
     if args.len() != 2 {
         panic!("no argument for directory provided");
     }
@@ -19,15 +17,15 @@ fn main() -> io::Result<()> {
     //println!("{:?}", &dir_path);
 
     //let dir_path = Path::new("./user_files");
-    let mut users: Vec<Player> = load_users_from_dir(dir_path)?;
+    let mut players: Vec<Player> = load_users_from_dir(dir_path)?;
     let _all_stages = load_all_stages();
 
-    let mut stage_vectors: HashMap<String, Vec<Stage>> = build_stage_vectors(&users);
+    let mut stage_vectors: HashMap<String, Vec<Stage>> = build_stage_vectors(&players);
     //dbg!(&stage_vectors);
 
-    rank_stages(&mut stage_vectors, &mut users);
+    rank_stages(&mut stage_vectors, &mut players);
 
-    build_leaderboard(&mut users);
+    build_leaderboard(&mut players);
     //    for (stage, vec) in stage_vectors {
     //       println!("{:?} , {:?}", stage, vec);
     //  }

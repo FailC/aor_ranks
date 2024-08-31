@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::fs::{self};
+use std::io;
 use std::path::Path;
-use std::{env, io};
 
 // Todo: better errors, put code into functions, better variable names
 //
@@ -39,7 +39,11 @@ impl Player {
 impl Stage {
     pub fn from_line(line: &str, player_name: &str) -> Option<Self> {
         let parts: Vec<&str> = line.split(':').collect();
-        if parts.len() == 3 {
+        // check for daily, weekly events / for now filter out bonus cars / include Australia DLC?
+        if parts.len() == 3
+            && !parts[0].contains("Bonus")
+            && !(parts[0].contains("daily") || parts[0].contains("weekly"))
+        {
             let name = parts[0].to_string();
             let time = parts[1].parse().ok()?;
             let car = parts[2].parse().ok()?;
@@ -59,6 +63,7 @@ pub fn read_stages_from_file(path: &Path, player_name: &str) -> io::Result<HashM
     let mut stages = HashMap::new();
     let content = fs::read_to_string(path)?;
     for line in content.lines() {
+        // check for daily / weekly events
         if let Some(stage) = Stage::from_line(line, player_name) {
             stages.insert(stage.name.clone(), stage);
         }
@@ -69,7 +74,7 @@ pub fn read_stages_from_file(path: &Path, player_name: &str) -> io::Result<HashM
 
 pub fn load_users_from_dir(dir: &Path) -> io::Result<Vec<Player>> {
     //let mut users = HashMap::new();
-    let mut users: Vec<Player> = Vec::new();
+    let mut players: Vec<Player> = Vec::new();
 
     for entry in fs::read_dir(dir)? {
         let entry = entry?;
@@ -87,36 +92,36 @@ pub fn load_users_from_dir(dir: &Path) -> io::Result<Vec<Player>> {
             if let Ok(stages) = read_stages_from_file(&path, &file_name) {
                 //users.insert(file_name, performance_map);
                 //let player: Player = Player::new(file_name, stages)
-                users.push(Player::new(file_name, stages))
+                players.push(Player::new(file_name, stages))
             }
         }
     }
-    Ok(users)
+    Ok(players)
 }
 
-pub fn compare_users(users: &HashMap<String, HashMap<String, Stage>>) {
-    // Example: Compare all users against the first user found
-    if let Some((first_user, first_performances)) = users.iter().next() {
-        println!("Comparing other users against: {}", first_user);
-
-        for (other_user, other_performances) in users.iter() {
-            if first_user == other_user {
-                continue; // Skip comparison with the same user
-            }
-
-            println!("Comparing {} with {}", first_user, other_user);
-
-            for (track, perf_a) in first_performances {
-                if let Some(perf_b) = other_performances.get(track) {
-                    println!(
-                        "Track {}: {}'s time = {}, {}'s time = {}",
-                        track, first_user, perf_a.time, other_user, perf_b.time
-                    );
-                }
-            }
-        }
-    }
-}
+// pub fn compare_users(users: &HashMap<String, HashMap<String, Stage>>) {
+//    // Example: Compare all users against the first user found
+//    if let Some((first_user, first_performances)) = users.iter().next() {
+//        println!("Comparing other users against: {}", first_user);
+//
+//        for (other_user, other_performances) in users.iter() {
+//            if first_user == other_user {
+//                continue; // Skip comparison with the same user
+//            }
+//
+//            println!("Comparing {} with {}", first_user, other_user);
+//
+//            for (track, perf_a) in first_performances {
+//                if let Some(perf_b) = other_performances.get(track) {
+//                    println!(
+//                        "Track {}: {}'s time = {}, {}'s time = {}",
+//                        track, first_user, perf_a.time, other_user, perf_b.time
+//                    );
+//                }
+//            }
+//        }
+//    }
+//}
 
 // best rust code ever
 pub fn load_all_stages() -> Vec<String> {
@@ -145,57 +150,39 @@ pub fn build_stage_vectors(players: &[Player]) -> HashMap<String, Vec<Stage>> {
     stage_vectors
 }
 
-// rank users based on their stage times
-pub fn rank_stages_old(stage_vectors: &mut HashMap<String, Vec<&Stage>>) {
-    for (stage_name, stages) in stage_vectors.iter_mut() {
-        stages.sort_by_key(|stage| stage.time);
-
-        println!("Rankings for Stage: {}", stage_name);
-        for (rank, stage) in stages.iter().enumerate() {
-            println!(
-                "Rank {}: Player {} with time {}",
-                rank + 1,
-                stage.player_name,
-                convert_ms_to_string(stage.time)
-            );
-        }
-        println!();
-    }
-}
-
 pub fn rank_stages(stage_vectors: &mut HashMap<String, Vec<Stage>>, players: &mut Vec<Player>) {
     for (_stage_name, stages) in stage_vectors.iter_mut() {
         // Sort the stages by time (ascending)
+        // how to manage the same time?
         stages.sort_by_key(|stage| stage.time);
 
-        println!("Rankings for Stage: {}", &_stage_name);
-        for (rank, stage) in stages.iter().enumerate() {
-            println!(
-                "Rank {}, player {}, time {}",
-                rank + 1,
-                stage.player_name,
-                stage.time
-            );
-        }
+        //println!("Stage: {}", &_stage_name);
+        //for (rank, stage) in stages.iter().enumerate() {
+        //    println!(
+        //        "Rank {}, player {}, time {}",
+        //        rank + 1,
+        //        stage.player_name,
+        //        convert_ms_to_string(stage.time)
+        //    );
+        //}
 
         if let Some(fastest_stage) = stages.first() {
             let fastest_time = fastest_stage.time as f64;
 
-            // Update player scores based on their ranking and new scoring algorithm
+            // update player scores based on their ranking
             for (pos, stage) in stages.iter().enumerate() {
                 let rank: i32 = pos as i32 + 1;
                 let player_time = stage.time as f64;
 
-                // Apply the new scoring formula
+                // scoring algorithm
                 let score = 1000.0 * (fastest_time / player_time) * 0.988f64.powi(rank - 1);
 
                 // Find the corresponding player and update their score
                 if let Some(player) = players
-                    //.clone()
+                    //.clone() // why clone here
                     .iter_mut()
                     .find(|p| p.name == stage.player_name)
                 {
-                    //let score_int = score as u8;
                     player.score += score as u32;
                 }
             }
