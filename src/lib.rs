@@ -3,15 +3,17 @@ use std::fs::{self};
 use std::io;
 use std::path::Path;
 
-// Todo: better errors, better variable names
+// todo:
 // add average map score
 // add car names, stage names (for single leaderboards)
+// one Leaderboard for every stage
+// write everything to files
 
 #[derive(Debug, Clone)]
 pub struct Stage {
     pub name: String,
     pub time: u32,
-    _car: u8,
+    car: u8,
     pub player_name: String,
 }
 
@@ -24,7 +26,7 @@ pub struct Player {
 }
 
 impl Player {
-    pub fn new(name: String, stages: HashMap<String, Stage>) -> Player {
+    fn new(name: String, stages: HashMap<String, Stage>) -> Player {
         Player {
             name,
             score: 0,
@@ -44,11 +46,11 @@ impl Stage {
         {
             let name = parts[0].to_string();
             let time = parts[1].parse().ok()?;
-            let _car = parts[2].parse().ok()?;
+            let car = parts[2].parse().ok()?;
             Some(Stage {
                 name,
                 time,
-                _car,
+                car,
                 player_name: player_name.to_string(),
             })
         } else {
@@ -76,14 +78,15 @@ pub fn load_users_from_dir(dir: &Path) -> io::Result<Vec<Player>> {
         let path = entry.path();
 
         if path.extension().and_then(|ext| ext.to_str()) == Some("txt") {
-            let file_name = path
+            // player_name
+            let player_name = path
                 .file_stem()
                 .and_then(|name| name.to_str())
                 .unwrap_or("Unknown")
                 .to_string();
 
-            if let Ok(stages) = read_stages_from_file(&path, &file_name) {
-                players.push(Player::new(file_name, stages))
+            if let Ok(stages) = read_stages_from_file(&path, &player_name) {
+                players.push(Player::new(player_name, stages))
             }
         }
     }
@@ -91,7 +94,7 @@ pub fn load_users_from_dir(dir: &Path) -> io::Result<Vec<Player>> {
 }
 
 // best rust code ever
-pub fn load_all_stages() -> Vec<String> {
+pub fn _load_all_stages() -> Vec<String> {
     let contents = fs::read_to_string("Leaderboards.txt").unwrap();
     let lines: Vec<String> = contents.lines().map(String::from).collect();
     let mut stage_names: Vec<String> = Vec::new();
@@ -116,16 +119,23 @@ pub fn collect_stages_from_players(players: &[Player]) -> HashMap<String, Vec<St
     every_stage
 }
 
-pub fn rank_stages(every_stage: &mut HashMap<String, Vec<Stage>>, players: &mut Vec<Player>) {
-    for (_stage_name, stages) in every_stage.iter_mut() {
+pub fn rank_stages(
+    every_stage: &mut HashMap<String, Vec<Stage>>,
+    players: &mut Vec<Player>,
+) -> HashMap<String, Vec<String>> {
+    // testing with vec for single stage leaderboards
+    // hasmap is better, most optimised rust code lmao
+    let mut single: HashMap<String, Vec<String>> = HashMap::new();
+    for (stage_name, stages) in every_stage.iter_mut() {
         // Sort the stages by time (ascending)
-        // how to manage the same time?
+        // how to handle same time?
+        // test
         stages.sort_by_key(|stage| stage.time);
 
         if let Some(fastest_stage) = stages.first() {
             let fastest_time = fastest_stage.time as f64;
 
-            // update player scores based on their ranking
+            // update player scores
             for (pos, stage) in stages.iter().enumerate() {
                 let rank: i32 = pos as i32 + 1;
                 let player_time = stage.time as f64;
@@ -139,12 +149,33 @@ pub fn rank_stages(every_stage: &mut HashMap<String, Vec<Stage>>, players: &mut 
                     player.score += score as u32;
                     player
                         .rankings
-                        .entry(_stage_name.clone())
+                        .entry(stage_name.clone())
                         .or_insert(score as u64);
+
+                    // meh
+                    let string = format!(
+                        "{} {} {} {}",
+                        player.name,
+                        convert_ms_to_string(stage.time),
+                        score as i64,
+                        stage.car
+                    );
+
+                    single
+                        .entry(stage.name.clone())
+                        .or_insert(Vec::new())
+                        .push(string);
                 }
             }
         }
     }
+    single
+    //for (name, players) in single {
+    //    println!("{}", name);
+    //    for p in players {
+    //        println!("{}", p);
+    //    }
+    //}
 }
 
 pub fn build_leaderboard(players: &mut Vec<Player>) {
@@ -165,7 +196,6 @@ pub fn convert_ms_to_string(ms: u32) -> String {
     let minutes = total_seconds / 60;
     let seconds = total_seconds % 60;
     let milliseconds = ms % 1000;
-
     let string = format!("{minutes:02}:{seconds:02}:{milliseconds:03}");
     string
 }

@@ -1,8 +1,7 @@
 use aor_ranks::*;
 use std::collections::HashMap;
 use std::env;
-use std::io;
-use std::io::Write;
+use std::io::{self, Write};
 use std::path::Path;
 
 fn main() -> io::Result<()> {
@@ -10,7 +9,9 @@ fn main() -> io::Result<()> {
 
     // for user input directory
     if args.len() != 2 {
-        panic!("no argument for directory provided");
+        eprintln!("no argument for directory provided");
+        eprintln!("example: cargo run -- testfiles");
+        return Ok(());
     }
 
     let dir = &args[1];
@@ -27,7 +28,10 @@ fn main() -> io::Result<()> {
     let mut stages: HashMap<String, Vec<Stage>> = collect_stages_from_players(&players);
 
     //dbg!(&stages);
-    rank_stages(&mut stages, &mut players);
+    let single_leaderboards = rank_stages(&mut stages, &mut players);
+
+    dbg!(single_leaderboards);
+    //dbg!(&players);
     build_leaderboard(&mut players);
 
     Ok(())
