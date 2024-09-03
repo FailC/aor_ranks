@@ -5,10 +5,10 @@ use std::io::{self, Write};
 use std::path::Path;
 
 // todo:
-// add average map score
-// add car names, stage names (for single leaderboards)
+// add car names
 // one Leaderboard for every stage?
 // write everything to files
+// calculating average position too, like average score
 
 fn main() -> io::Result<()> {
     let args: Vec<String> = env::args().collect();
@@ -37,16 +37,17 @@ fn main() -> io::Result<()> {
     }
 
     let single_leaderboards = rank_stages(&stages, &mut players);
-    dbg!(&single_leaderboards);
+    let leaderboard: Vec<String> = build_leaderboard(&mut players);
 
-    let _leaderboard: Vec<String> = build_leaderboard(&mut players);
+    // debug part begins here...
 
-    for (s, x) in single_leaderboards.iter() {
-        println!("{}", s);
-        for y in x {
-            println!("{}", y);
-        }
-    }
+    dbg!(leaderboard);
+    //for (s, x) in single_leaderboards.iter() {
+    //    println!("{}", s);
+    //    for y in x {
+    //        println!("{}", y);
+    //    }
+    //}
 
     //let p = &players[0];
     //dbg!(p);
