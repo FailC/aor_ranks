@@ -2,22 +2,16 @@ use std::collections::HashMap;
 use std::fs::{self};
 use std::io;
 use std::path::Path;
-
-// todo:
-// add average map score
-// add car names, stage names (for single leaderboards)
-// one Leaderboard for every stage
-// write everything to files
-
 #[derive(Debug, Clone)]
+
 pub struct Stage {
     pub name: String,
     pub time: u32,
-    car: u8,
+    pub car: u8,
     pub player_name: String,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Debug, Clone)]
 pub struct Player {
     pub name: String,
     pub score: u32,
@@ -33,6 +27,15 @@ impl Player {
             rankings: HashMap::new(),
             stages,
         }
+    }
+    pub fn average_score(&self) {
+        let mut score: u64 = 0;
+        let mut len = 0;
+        for (_h, v) in &self.rankings {
+            score += v;
+            len += 1;
+        }
+        println!("average score {}: {score}", self.name, score = score / len);
     }
 }
 impl Stage {
@@ -56,6 +59,14 @@ impl Stage {
         } else {
             None
         }
+    }
+    pub fn time_to_string(&self) -> String {
+        let total_seconds = self.time / 1000;
+        let minutes = total_seconds / 60;
+        let seconds = total_seconds % 60;
+        let milliseconds = self.time % 1000;
+        let string = format!("{minutes:02}:{seconds:02}:{milliseconds:03}");
+        string
     }
 }
 
@@ -119,32 +130,24 @@ pub fn collect_stages_from_players(players: &[Player]) -> HashMap<String, Vec<St
     every_stage
 }
 
+// should only return or mutate stuff, in main generate all files / directories
 pub fn rank_stages(
-    every_stage: &mut HashMap<String, Vec<Stage>>,
+    every_stage: &HashMap<String, Vec<Stage>>,
     players: &mut Vec<Player>,
 ) -> HashMap<String, Vec<String>> {
-    // testing with vec for single stage leaderboards
-    // hasmap is better, most optimised rust code lmao
     let mut single: HashMap<String, Vec<String>> = HashMap::new();
-    for (stage_name, stages) in every_stage.iter_mut() {
-        // Sort the stages by time (ascending)
-        // how to handle same time?
-        // test
-        stages.sort_by_key(|stage| stage.time);
 
+    for (stage_name, stages) in every_stage.iter() {
         if let Some(fastest_stage) = stages.first() {
             let fastest_time = fastest_stage.time as f64;
-
             // update player scores
             for (pos, stage) in stages.iter().enumerate() {
                 let rank: i32 = pos as i32 + 1;
                 let player_time = stage.time as f64;
-
                 // scoring algorithm
                 let score =
                     1000.0 * (fastest_time / player_time) * 0.988f64.powf(rank as f64 - 1.0);
-
-                // Find the corresponding player and update their score
+                // Find player and update score
                 if let Some(player) = players.iter_mut().find(|p| p.name == stage.player_name) {
                     player.score += score as u32;
                     player
@@ -152,15 +155,13 @@ pub fn rank_stages(
                         .entry(stage_name.clone())
                         .or_insert(score as u64);
 
-                    // meh
                     let string = format!(
                         "{} {} {} {}",
                         player.name,
-                        convert_ms_to_string(stage.time),
+                        stage.time_to_string(),
                         score as i64,
                         stage.car
                     );
-
                     single
                         .entry(stage.name.clone())
                         .or_insert(Vec::new())
@@ -170,32 +171,28 @@ pub fn rank_stages(
         }
     }
     single
-    //for (name, players) in single {
-    //    println!("{}", name);
-    //    for p in players {
-    //        println!("{}", p);
-    //    }
-    //}
 }
 
-pub fn build_leaderboard(players: &mut Vec<Player>) {
+pub fn build_leaderboard(players: &mut Vec<Player>) -> Vec<String> {
     // Sort players by score in descending order
     players.sort_by(|a, b| {
         b.score
             .partial_cmp(&a.score)
             .unwrap_or(std::cmp::Ordering::Equal)
     });
-    println!("\nFinal Leaderboard:");
+    let mut string: Vec<String> = Vec::new();
     for (rank, player) in players.iter().enumerate() {
-        println!("{}: {} \t{:.2} points", rank + 1, player.name, player.score);
+        let s = format!("{}: {} \t{:.2} points", rank + 1, player.name, player.score);
+        string.push(s);
     }
-}
-
-pub fn convert_ms_to_string(ms: u32) -> String {
-    let total_seconds = ms / 1000;
-    let minutes = total_seconds / 60;
-    let seconds = total_seconds % 60;
-    let milliseconds = ms % 1000;
-    let string = format!("{minutes:02}:{seconds:02}:{milliseconds:03}");
     string
 }
+
+//pub fn convert_ms_to_string(ms: u32) -> String {
+//    let total_seconds = ms / 1000;
+//    let minutes = total_seconds / 60;
+//    let seconds = total_seconds % 60;
+//    let milliseconds = ms % 1000;
+//    let string = format!("{minutes:02}:{seconds:02}:{milliseconds:03}");
+//    string
+//}
