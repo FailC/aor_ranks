@@ -36,19 +36,23 @@ fn main() -> io::Result<()> {
         x.sort_by(|a, b| a.time.cmp(&b.time));
     }
 
-    let _single_leaderboards = rank_stages(&stages, &mut players);
+    let single_leaderboards = rank_stages(&stages, &mut players);
+    dbg!(&single_leaderboards);
 
-    let _leaderboard = build_leaderboard(&mut players);
+    let _leaderboard: Vec<String> = build_leaderboard(&mut players);
 
-    let p = &players[0];
-    dbg!(p);
+    for (s, x) in single_leaderboards.iter() {
+        println!("{}", s);
+        for y in x {
+            println!("{}", y);
+        }
+    }
 
-    //for e in leaderboard {
-    //    println!("{}", e);
-    //}
+    //let p = &players[0];
+    //dbg!(p);
 
     //for p in players {
-    //    p.average_score()
+    //    println!("{}", p.get_average_score());
     //}
 
     Ok(())

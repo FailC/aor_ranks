@@ -3,12 +3,223 @@ use std::fs::{self};
 use std::io;
 use std::path::Path;
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
+enum Finland {
+    Stage1,
+    Stage2,
+    Stage3,
+    Stage4,
+    Stage5,
+    Stage6,
+}
+#[allow(dead_code)]
+enum Sardinia {
+    Stage1,
+    Stage2,
+    Stage3,
+    Stage4,
+    Stage5,
+    Stage6,
+}
+#[allow(dead_code)]
+enum Japan {
+    Stage1,
+    Stage2,
+    Stage3,
+    Stage4,
+    Stage5,
+    Stage6,
+}
+#[allow(dead_code)]
+enum Norway {
+    Stage1,
+    Stage2,
+    Stage3,
+    Stage4,
+    Stage5,
+    Stage6,
+}
+#[allow(dead_code)]
+enum Germany {
+    Stage1,
+    Stage2,
+    Stage3,
+    Stage4,
+    Stage5,
+    Stage6,
+}
+#[allow(dead_code)]
+enum Kenya {
+    Stage1,
+    Stage2,
+    Stage3,
+    Stage4,
+    Stage5,
+    Stage6,
+}
+#[allow(dead_code)]
+enum Indonesia {
+    Stage1,
+    Stage2,
+    Stage3,
+    Stage4,
+    Stage5,
+    Stage6,
+}
+#[allow(dead_code)]
+enum Australia {
+    Stage1,
+    Stage2,
+    Stage3,
+    Stage4,
+    Stage5,
+    Stage6,
+}
 
+impl Finland {
+    fn from_number(stage_number: u8) -> Option<&'static str> {
+        match stage_number {
+            1 => Some("noormarku"),
+            2 => Some("lamppi"),
+            3 => Some("palus"),
+            4 => Some("lassila"),
+            5 => Some("kairila"),
+            6 => Some("haaparjarvi"),
+            _ => None,
+        }
+    }
+}
+impl Sardinia {
+    fn from_number(stage_number: u8) -> Option<&'static str> {
+        match stage_number {
+            1 => Some("villacidro"),
+            2 => Some("san gavino monreale"),
+            3 => Some("san benedetto"),
+            4 => Some("gennamari"),
+            5 => Some("portu maga"),
+            6 => Some("montevecchio"),
+            _ => None,
+        }
+    }
+}
+impl Japan {
+    fn from_number(stage_number: u8) -> Option<&'static str> {
+        match stage_number {
+            1 => Some("nasu Highland"),
+            2 => Some("mount Asama"),
+            3 => Some("mount Akagi"),
+            4 => Some("nikko"),
+            5 => Some("tsumagoi"),
+            6 => Some("mount Haruna"),
+            _ => None,
+        }
+    }
+}
+impl Norway {
+    fn from_number(stage_number: u8) -> Option<&'static str> {
+        match stage_number {
+            1 => Some("laupstad"),
+            2 => Some("vestpollen"),
+            3 => Some("stronstad"),
+            4 => Some("kvannkjosen"),
+            5 => Some("grunnfor"),
+            6 => Some("lake Rostavatn"),
+            _ => None,
+        }
+    }
+}
+impl Germany {
+    fn from_number(stage_number: u8) -> Option<&'static str> {
+        match stage_number {
+            1 => Some("hockweiler"),
+            2 => Some("franzenheim"),
+            3 => Some("holzerath"),
+            4 => Some("farschweiler"),
+            5 => Some("mertesdorf"),
+            6 => Some("gonnesweiler"),
+            _ => None,
+        }
+    }
+}
+impl Kenya {
+    fn from_number(stage_number: u8) -> Option<&'static str> {
+        match stage_number {
+            1 => Some("mount kenya"),
+            2 => Some("karura"),
+            3 => Some("homa bay"),
+            4 => Some("ndere island"),
+            5 => Some("lake baringo"),
+            6 => Some("lake nakuru"),
+            _ => None,
+        }
+    }
+}
+impl Indonesia {
+    fn from_number(stage_number: u8) -> Option<&'static str> {
+        match stage_number {
+            1 => Some("mount kawi"),
+            2 => Some("semangka island"),
+            3 => Some("satonda island"),
+            4 => Some("oreng valley"),
+            5 => Some("sangeang island"),
+            6 => Some("kalabakan island"),
+            _ => None,
+        }
+    }
+}
+impl Australia {
+    fn from_number(stage_number: u8) -> Option<&'static str> {
+        match stage_number {
+            1 => Some("gum scrub"),
+            2 => Some("toorooka"),
+            3 => Some("nulla nulla"),
+            4 => Some("comara canyon"),
+            5 => Some("lake lucernia"),
+            6 => Some("wombamurra"),
+            _ => None,
+        }
+    }
+}
+
+enum Location {
+    Finland,
+    Sardinia,
+    Japan,
+    Norway,
+    Germany,
+    Kenya,
+    Indonesia,
+    Australia,
+}
+
+impl Location {
+    fn from_str(location: &str) -> Option<Location> {
+        match location {
+            "Finland" => Some(Location::Finland),
+            "Sardinia" => Some(Location::Sardinia),
+            "Japan" => Some(Location::Japan),
+            "Norway" => Some(Location::Norway),
+            "Germany" => Some(Location::Germany),
+            "kenya" => Some(Location::Kenya),
+            "Indonesia" => Some(Location::Indonesia),
+            "Australia" => Some(Location::Australia),
+            _ => None,
+        }
+    }
+}
+// Define similar enums for other countries...
+
+#[derive(Debug, Clone)]
 pub struct Stage {
     pub name: String,
     pub time: u32,
     pub car: u8,
     pub player_name: String,
+    location: String,
+    stage_number: u8,
+    stage_name: String,
+    direction: String,
+    weather: String,
 }
 
 #[derive(Debug, Clone)]
@@ -28,16 +239,17 @@ impl Player {
             stages,
         }
     }
-    pub fn average_score(&self) {
+    pub fn get_average_score(&self) -> String {
         let mut score: u64 = 0;
         let mut len = 0;
         for (_h, v) in &self.rankings {
             score += v;
             len += 1;
         }
-        println!("average score {}: {score}", self.name, score = score / len);
+        format!("average score {}: {score}", self.name, score = score / len)
     }
 }
+
 impl Stage {
     pub fn from_line(line: &str, player_name: &str) -> Option<Self> {
         let parts: Vec<&str> = line.split(':').collect();
@@ -50,11 +262,34 @@ impl Stage {
             let name = parts[0].to_string();
             let time = parts[1].parse().ok()?;
             let car = parts[2].parse().ok()?;
+
+            let location_parts: Vec<&str> = parts[0].split("_").collect();
+            let location = location_parts[0];
+            let stage_number: u8 = location_parts[2].parse().ok()?;
+            let location_enum = Location::from_str(location)?;
+            let stage_name = match location_enum {
+                Location::Finland => Finland::from_number(stage_number),
+                Location::Sardinia => Sardinia::from_number(stage_number),
+                Location::Japan => Japan::from_number(stage_number),
+                Location::Norway => Norway::from_number(stage_number),
+                Location::Germany => Germany::from_number(stage_number),
+                Location::Kenya => Kenya::from_number(stage_number),
+                Location::Indonesia => Indonesia::from_number(stage_number),
+                Location::Australia => Australia::from_number(stage_number),
+            }?;
+            let direction = location_parts[3].to_string();
+            let weather = location_parts[4].to_string();
+
             Some(Stage {
                 name,
                 time,
                 car,
                 player_name: player_name.to_string(),
+                location: location.to_string(),
+                stage_number,
+                stage_name: stage_name.to_string(),
+                direction,
+                weather,
             })
         } else {
             None
@@ -162,10 +397,8 @@ pub fn rank_stages(
                         score as i64,
                         stage.car
                     );
-                    single
-                        .entry(stage.name.clone())
-                        .or_insert(Vec::new())
-                        .push(string);
+                    let n = format!("{}: {}", stage.location, stage.stage_name);
+                    single.entry(n).or_insert(Vec::new()).push(string);
                 }
             }
         }
