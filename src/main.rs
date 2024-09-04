@@ -1,6 +1,7 @@
 use aor_ranks::*;
 use std::collections::HashMap;
 use std::env;
+use std::fmt::format;
 use std::io::{self, Write};
 use std::path::Path;
 
@@ -36,12 +37,24 @@ fn main() -> io::Result<()> {
         x.sort_by(|a, b| a.time.cmp(&b.time));
     }
 
-    let single_leaderboards = rank_stages(&stages, &mut players);
+    let single_leaderboards: HashMap<String, Vec<String>> = rank_stages(&stages, &mut players);
     let leaderboard: Vec<String> = build_leaderboard(&mut players);
 
     // debug part begins here...
 
-    dbg!(leaderboard);
+    create_folder();
+    create_file(leaderboard, "ranks").expect("ERROR: failed to create file");
+
+    // make content to display..
+    let mut text: Vec<String> = Vec::new();
+    for (k, v) in single_leaderboards.iter() {
+        text.push(format!("{}", k));
+        for y in v {
+            text.push(format!("{}", y));
+        }
+    }
+    create_file(text, "single_stages").expect("ERROR: failed to create file");
+
     //for (s, x) in single_leaderboards.iter() {
     //    println!("{}", s);
     //    for y in x {

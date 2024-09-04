@@ -1,6 +1,7 @@
 use std::collections::HashMap;
-use std::fs::{self};
-use std::io;
+use std::fs::File;
+use std::fs::{self, DirBuilder};
+use std::io::{self, Write};
 use std::path::Path;
 
 pub mod game;
@@ -225,6 +226,28 @@ pub fn build_leaderboard(players: &mut Vec<Player>) -> Vec<String> {
         string.push(s);
     }
     string
+}
+
+pub fn create_folder() {
+    let path = "./Leaderboards";
+    match DirBuilder::new().create(path) {
+        Ok(()) => println!("directory created"),
+        Err(_) => println!("WARNING: directory exists"),
+    };
+}
+
+// create files for each leaderboard?
+pub fn create_file(text: Vec<String>, file_name: &str) -> std::io::Result<()> {
+    let dir_path = "./Leaderboards";
+    //let file_name = "foo.txt";
+    let file_path = Path::new(dir_path).join(file_name);
+    let mut file = File::create(file_path)?;
+
+    for x in text {
+        file.write_all(x.as_bytes())?;
+        file.write_all("\n".as_bytes())?;
+    }
+    Ok(())
 }
 
 //pub fn convert_ms_to_string(ms: u32) -> String {
