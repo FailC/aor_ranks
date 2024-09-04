@@ -231,8 +231,8 @@ pub fn build_leaderboard(players: &mut Vec<Player>) -> Vec<String> {
 pub fn create_folder() {
     let path = "./Leaderboards";
     match DirBuilder::new().create(path) {
-        Ok(()) => println!("directory created"),
-        Err(_) => println!("WARNING: directory exists"),
+        Ok(()) => println!("creating directory.."),
+        Err(_) => println!("directory exists"),
     };
 }
 
@@ -241,12 +241,13 @@ pub fn create_file(text: Vec<String>, file_name: &str) -> std::io::Result<()> {
     let dir_path = "./Leaderboards";
     //let file_name = "foo.txt";
     let file_path = Path::new(dir_path).join(file_name);
-    let mut file = File::create(file_path)?;
+    let mut file = File::create(&file_path)?;
 
     for x in text {
         file.write_all(x.as_bytes())?;
         file.write_all("\n".as_bytes())?;
     }
+    println!("created: {}", file_path.display());
     Ok(())
 }
 

@@ -1,7 +1,6 @@
 use aor_ranks::*;
 use std::collections::HashMap;
 use std::env;
-use std::fmt::format;
 use std::io::{self, Write};
 use std::path::Path;
 
@@ -43,7 +42,8 @@ fn main() -> io::Result<()> {
     // debug part begins here...
 
     create_folder();
-    create_file(leaderboard, "ranks").expect("ERROR: failed to create file");
+    let _ = create_file(leaderboard, "ranks")
+        .map_err(|err| eprintln!("ERROR: failed to create file: {err}"));
 
     // make content to display..
     let mut text: Vec<String> = Vec::new();
@@ -53,17 +53,8 @@ fn main() -> io::Result<()> {
             text.push(format!("{}", y));
         }
     }
-    create_file(text, "single_stages").expect("ERROR: failed to create file");
-
-    //for (s, x) in single_leaderboards.iter() {
-    //    println!("{}", s);
-    //    for y in x {
-    //        println!("{}", y);
-    //    }
-    //}
-
-    //let p = &players[0];
-    //dbg!(p);
+    let _ = create_file(text, "single_stages")
+        .map_err(|err| eprintln!("ERROR: failed to create file: {err}"));
 
     //for p in players {
     //    println!("{}", p.get_average_score());
