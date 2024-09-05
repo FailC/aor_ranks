@@ -3,78 +3,14 @@
 // (add all car names for groups)
 pub mod locations {
     #[derive(Debug, Clone)]
-    #[allow(dead_code)]
-    pub enum Finland {
-        Stage1,
-        Stage2,
-        Stage3,
-        Stage4,
-        Stage5,
-        Stage6,
-    }
-    #[allow(dead_code)]
-    pub enum Sardinia {
-        Stage1,
-        Stage2,
-        Stage3,
-        Stage4,
-        Stage5,
-        Stage6,
-    }
-    #[allow(dead_code)]
-    pub enum Japan {
-        Stage1,
-        Stage2,
-        Stage3,
-        Stage4,
-        Stage5,
-        Stage6,
-    }
-    #[allow(dead_code)]
-    pub enum Norway {
-        Stage1,
-        Stage2,
-        Stage3,
-        Stage4,
-        Stage5,
-        Stage6,
-    }
-    #[allow(dead_code)]
-    pub enum Germany {
-        Stage1,
-        Stage2,
-        Stage3,
-        Stage4,
-        Stage5,
-        Stage6,
-    }
-    #[allow(dead_code)]
-    pub enum Kenya {
-        Stage1,
-        Stage2,
-        Stage3,
-        Stage4,
-        Stage5,
-        Stage6,
-    }
-    #[allow(dead_code)]
-    pub enum Indonesia {
-        Stage1,
-        Stage2,
-        Stage3,
-        Stage4,
-        Stage5,
-        Stage6,
-    }
-    #[allow(dead_code)]
-    pub enum Australia {
-        Stage1,
-        Stage2,
-        Stage3,
-        Stage4,
-        Stage5,
-        Stage6,
-    }
+    pub enum Finland {}
+    pub enum Sardinia {}
+    pub enum Japan {}
+    pub enum Norway {}
+    pub enum Germany {}
+    pub enum Kenya {}
+    pub enum Indonesia {}
+    pub enum Australia {}
 
     impl Finland {
         pub fn from_number(stage_number: u8) -> Option<&'static str> {

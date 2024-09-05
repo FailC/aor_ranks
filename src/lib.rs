@@ -8,11 +8,12 @@ pub mod game;
 use game::locations::*;
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct Stage {
-    pub name: String,
+    name: String,
     pub time: u32,
-    pub car: u8,
-    pub player_name: String,
+    car: u8,
+    player_name: String,
     location: String,
     stage_number: u8,
     stage_name: String,
@@ -23,10 +24,10 @@ pub struct Stage {
 
 #[derive(Debug, Clone)]
 pub struct Player {
-    pub name: String,
-    pub score: u32,
-    pub rankings: HashMap<String, u64>,
-    pub stages: HashMap<String, Stage>,
+    name: String,
+    score: u32,
+    rankings: HashMap<String, u64>,
+    stages: HashMap<String, Stage>,
 }
 
 impl Player {
@@ -165,12 +166,11 @@ pub fn collect_stages_from_players(players: &[Player]) -> HashMap<String, Vec<St
     every_stage
 }
 
-// should only return or mutate stuff, in main generate all files / directories
-pub fn rank_stages(
+pub fn get_ranked_stages(
     every_stage: &HashMap<String, Vec<Stage>>,
     players: &mut Vec<Player>,
 ) -> HashMap<String, Vec<String>> {
-    let mut single: HashMap<String, Vec<String>> = HashMap::new();
+    let mut ranked_stages: HashMap<String, Vec<String>> = HashMap::new();
 
     for (stage_name, stages) in every_stage.iter() {
         if let Some(fastest_stage) = stages.first() {
@@ -190,14 +190,14 @@ pub fn rank_stages(
                         .entry(stage_name.clone())
                         .or_insert(score as u64);
 
-                    let string = format!(
+                    let player_value = format!(
                         "{} {} {} {}",
                         player.name,
                         stage.time_to_string(),
                         score as i64,
                         stage.car
                     );
-                    let n = format!(
+                    let stage_key = format!(
                         "{}: {} {} {} {}",
                         stage.location,
                         stage.stage_name,
@@ -205,15 +205,19 @@ pub fn rank_stages(
                         stage.direction,
                         stage.weather
                     );
-                    single.entry(n).or_insert(Vec::new()).push(string);
+                    ranked_stages
+                        .entry(stage_key)
+                        .or_insert(Vec::new())
+                        .push(player_value);
+                    // file for every single stage here? -> extra function
                 }
             }
         }
     }
-    single
+    ranked_stages
 }
 
-pub fn build_leaderboard(players: &mut Vec<Player>) -> Vec<String> {
+pub fn get_leaderboard(players: &mut Vec<Player>) -> Vec<String> {
     // Sort players by score in descending order
     players.sort_by(|a, b| {
         b.score
@@ -239,7 +243,6 @@ pub fn create_folder() {
 // create files for each leaderboard?
 pub fn create_file(text: Vec<String>, file_name: &str) -> std::io::Result<()> {
     let dir_path = "./Leaderboards";
-    //let file_name = "foo.txt";
     let file_path = Path::new(dir_path).join(file_name);
     let mut file = File::create(&file_path)?;
 
@@ -250,12 +253,3 @@ pub fn create_file(text: Vec<String>, file_name: &str) -> std::io::Result<()> {
     println!("created: {}", file_path.display());
     Ok(())
 }
-
-//pub fn convert_ms_to_string(ms: u32) -> String {
-//    let total_seconds = ms / 1000;
-//    let minutes = total_seconds / 60;
-//    let seconds = total_seconds % 60;
-//    let milliseconds = ms % 1000;
-//    let string = format!("{minutes:02}:{seconds:02}:{milliseconds:03}");
-//    string
-//}

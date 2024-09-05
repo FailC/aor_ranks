@@ -36,8 +36,9 @@ fn main() -> io::Result<()> {
         x.sort_by(|a, b| a.time.cmp(&b.time));
     }
 
-    let single_leaderboards: HashMap<String, Vec<String>> = rank_stages(&stages, &mut players);
-    let leaderboard: Vec<String> = build_leaderboard(&mut players);
+    let single_leaderboards: HashMap<String, Vec<String>> =
+        get_ranked_stages(&stages, &mut players);
+    let leaderboard: Vec<String> = get_leaderboard(&mut players);
 
     // debug part begins here...
 
