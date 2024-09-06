@@ -41,12 +41,12 @@ pub mod locations {
     impl Japan {
         pub fn from_number(stage_number: u8) -> Option<&'static str> {
             match stage_number {
-                1 => Some("nasu Highland"),
-                2 => Some("mount Asama"),
-                3 => Some("mount Akagi"),
+                1 => Some("nasu highland"),
+                2 => Some("mount asama"),
+                3 => Some("mount akagi"),
                 4 => Some("nikko"),
                 5 => Some("tsumagoi"),
-                6 => Some("mount Haruna"),
+                6 => Some("mount haruna"),
                 _ => None,
             }
         }

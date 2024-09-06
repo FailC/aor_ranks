@@ -42,20 +42,26 @@ fn main() -> io::Result<()> {
 
     // debug part begins here...
 
-    create_folder();
-    let _ = create_file(leaderboard, "ranks")
+    create_folder("./Leaderboards");
+    create_folder("./Leaderboards/all_stages");
+    let _ = create_file("./Leaderboards", leaderboard, "ranks")
         .map_err(|err| eprintln!("ERROR: failed to create file: {err}"));
 
+    create_single_leaderboards(single_leaderboards);
+
     // make content to display..
-    let mut text: Vec<String> = Vec::new();
-    for (k, v) in single_leaderboards.iter() {
-        text.push(format!("{}", k));
-        for y in v {
-            text.push(format!("{}", y));
-        }
-    }
-    let _ = create_file(text, "single_stages")
-        .map_err(|err| eprintln!("ERROR: failed to create file: {err}"));
+    //let mut text: Vec<String> = Vec::new();
+    //for (k, v) in single_leaderboards.iter() {
+    //    let mut text: Vec<String> = Vec::new();
+    //    text.push(format!("{}", k));
+    //    for y in v {
+    //        text.push(format!("{}", y));
+    //    }
+    //    let _ = create_file(text.clone(), k).unwrap();
+    //}
+
+    //  let _ = create_file(text, "single_stages")
+    //      .map_err(|err| eprintln!("ERROR: failed to create file: {err}"));
 
     //for p in players {
     //    println!("{}", p.get_average_score());

@@ -219,6 +219,17 @@ pub fn get_ranked_stages(
     ranked_stages
 }
 
+pub fn create_single_leaderboards(single_leaderboards: HashMap<String, Vec<String>>) {
+    for (k, v) in single_leaderboards.iter() {
+        let mut text: Vec<String> = Vec::new();
+        text.push(format!("{}", k));
+        for y in v {
+            text.push(format!("{}", y));
+        }
+        let _ = create_file("./Leaderboards/all_stages", text.clone(), k).unwrap();
+    }
+}
+
 pub fn get_leaderboard(players: &mut Vec<Player>) -> Vec<String> {
     // Sort players by score in descending order
     players.sort_by(|a, b| {
@@ -234,8 +245,8 @@ pub fn get_leaderboard(players: &mut Vec<Player>) -> Vec<String> {
     string
 }
 
-pub fn create_folder() {
-    let path = "./Leaderboards";
+pub fn create_folder(path: &str) {
+    //let path = "./Leaderboards";
     match DirBuilder::new().create(path) {
         Ok(()) => println!("creating directory.."),
         Err(_) => println!("directory exists"),
@@ -243,8 +254,8 @@ pub fn create_folder() {
 }
 
 // create files for each leaderboard?
-pub fn create_file(text: Vec<String>, file_name: &str) -> std::io::Result<()> {
-    let dir_path = "./Leaderboards";
+pub fn create_file(dir_path: &str, text: Vec<String>, file_name: &str) -> std::io::Result<()> {
+    //let dir_path = "./Leaderboards";
     let file_path = Path::new(dir_path).join(file_name);
     let mut file = File::create(&file_path)?;
 
