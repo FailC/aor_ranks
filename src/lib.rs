@@ -1,10 +1,9 @@
 use std::collections::HashMap;
-use std::fs::File;
-use std::fs::{self, DirBuilder};
+use std::fs::{self, DirBuilder, File};
 use std::io::{self, Write};
 use std::path::Path;
 
-pub mod game;
+mod game;
 use game::locations::*;
 
 #[derive(Debug, Clone)]
@@ -31,7 +30,7 @@ pub struct Player {
 }
 
 impl Player {
-    fn new(name: String, stages: HashMap<String, Stage>) -> Player {
+    fn new(name: String, stages: HashMap<String, Stage>) -> Self {
         Player {
             name,
             score: 0,
@@ -59,10 +58,13 @@ impl Stage {
             && !parts[0].contains("Bonus")
             && !(parts[0].contains("daily") || parts[0].contains("weekly"))
         {
-            let name = parts[0].to_string();
             let time = parts[1].parse().ok()?;
+            // return early because of DNF time
+            if time >= 356400000 {
+                return None;
+            }
+            let name = parts[0].to_string();
             let car = parts[2].parse().ok()?;
-
             let location_parts: Vec<&str> = parts[0].split("_").collect();
             let location = location_parts[0];
             let stage_number: u8 = location_parts[2].parse().ok()?;
