@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::fs::{self, DirBuilder, File};
 use std::io::{self, Write};
 use std::path::Path;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 mod game;
 use game::locations::*;
@@ -38,14 +39,17 @@ impl Player {
             stages,
         }
     }
-    pub fn get_average_score(&self) -> String {
+    pub fn get_average_score(&self) -> u64 {
         let mut score: u64 = 0;
         let mut len = 0;
         for (_h, v) in &self.rankings {
             score += v;
             len += 1;
         }
-        format!("average score {}: {score}", self.name, score = score / len)
+        if len == 0 {
+            return 0;
+        }
+        score / len
     }
 }
 
@@ -239,7 +243,13 @@ pub fn get_leaderboard(players: &mut Vec<Player>) -> Vec<String> {
     });
     let mut string: Vec<String> = Vec::new();
     for (rank, player) in players.iter().enumerate() {
-        let s = format!("{}: {} \t{:.2} points", rank + 1, player.name, player.score);
+        let s = format!(
+            "{}: {} \t{:.2} points\t({})",
+            rank + 1,
+            player.name,
+            player.score,
+            player.get_average_score()
+        );
         string.push(s);
     }
     string
@@ -248,12 +258,13 @@ pub fn get_leaderboard(players: &mut Vec<Player>) -> Vec<String> {
 pub fn create_folder(path: &str) {
     //let path = "./Leaderboards";
     match DirBuilder::new().create(path) {
-        Ok(()) => println!("creating directory.."),
-        Err(_) => println!("directory exists"),
+        Ok(()) => println!("creating directory: {}", path),
+        Err(_) => println!("directory exists: {}", path),
     };
 }
 
-// create files for each leaderboard?
+// Counter for some debugging i guess
+pub static COUNTER: AtomicUsize = AtomicUsize::new(0);
 pub fn create_file(dir_path: &str, text: Vec<String>, file_name: &str) -> std::io::Result<()> {
     //let dir_path = "./Leaderboards";
     let file_path = Path::new(dir_path).join(file_name);
@@ -263,6 +274,7 @@ pub fn create_file(dir_path: &str, text: Vec<String>, file_name: &str) -> std::i
         file.write_all(x.as_bytes())?;
         file.write_all("\n".as_bytes())?;
     }
-    println!("created: {}", file_path.display());
+    COUNTER.fetch_add(1, Ordering::SeqCst);
+    //println!("created: {}", file_path.display());
     Ok(())
 }

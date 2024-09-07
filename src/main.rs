@@ -47,8 +47,11 @@ fn main() -> io::Result<()> {
     let _ = create_file("./Leaderboards", leaderboard, "ranks")
         .map_err(|err| eprintln!("ERROR: failed to create file: {err}"));
 
+    // puts single stages all in one directory
+    // split up into country directories?
     create_single_leaderboards(single_leaderboards);
 
+    println!("files created: {:?}", COUNTER);
     // make content to display..
     //let mut text: Vec<String> = Vec::new();
     //for (k, v) in single_leaderboards.iter() {
