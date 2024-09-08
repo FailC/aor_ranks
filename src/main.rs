@@ -47,23 +47,6 @@ fn main() -> io::Result<()> {
     create_single_leaderboards(single_leaderboards);
 
     println!("files created: {:?}", COUNTER);
-    // make content to display..
-    //let mut text: Vec<String> = Vec::new();
-    //for (k, v) in single_leaderboards.iter() {
-    //    let mut text: Vec<String> = Vec::new();
-    //    text.push(format!("{}", k));
-    //    for y in v {
-    //        text.push(format!("{}", y));
-    //    }
-    //    let _ = create_file(text.clone(), k).unwrap();
-    //}
-
-    //  let _ = create_file(text, "single_stages")
-    //      .map_err(|err| eprintln!("ERROR: failed to create file: {err}"));
-
-    //for p in players {
-    //    println!("{}", p.get_average_score());
-    //}
 
     Ok(())
 }

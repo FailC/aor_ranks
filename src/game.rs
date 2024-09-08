@@ -136,7 +136,7 @@ pub mod locations {
                 "Japan" => Some(Countries::Japan),
                 "Norway" => Some(Countries::Norway),
                 "Germany" => Some(Countries::Germany),
-                "kenya" => Some(Countries::Kenya),
+                "Kenya" => Some(Countries::Kenya),
                 "Indonesia" => Some(Countries::Indonesia),
                 "Australia" => Some(Countries::Australia),
                 _ => None,
