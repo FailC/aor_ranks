@@ -169,6 +169,9 @@ pub fn collect_stages_from_players(players: &[Player]) -> HashMap<String, Vec<St
                 .push(stage.clone());
         }
     }
+    for stage in every_stage.values_mut() {
+        stage.sort_by(|a, b| a.time.cmp(&b.time));
+    }
     every_stage
 }
 

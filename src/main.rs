@@ -6,9 +6,8 @@ use std::path::Path;
 
 // todo:
 // add car names
-// one Leaderboard for every stage?
-// write everything to files
-// calculating average position too, like average score
+// write everything to files (done, but sort it into directories?)
+// calculating average position too, average score done
 
 fn main() -> io::Result<()> {
     let args: Vec<String> = env::args().collect();
@@ -30,11 +29,7 @@ fn main() -> io::Result<()> {
     let mut players: Vec<Player> = load_users_from_dir(dir_path)?;
     println!("{} players", players.len());
 
-    let mut stages: HashMap<String, Vec<Stage>> = collect_stages_from_players(&players);
-
-    for x in stages.values_mut() {
-        x.sort_by(|a, b| a.time.cmp(&b.time));
-    }
+    let stages: HashMap<String, Vec<Stage>> = collect_stages_from_players(&players);
 
     let single_leaderboards: HashMap<String, Vec<String>> =
         get_ranked_stages(&stages, &mut players);
