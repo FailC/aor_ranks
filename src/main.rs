@@ -4,6 +4,7 @@ use std::env;
 use std::io::{self, Write};
 use std::path::Path;
 
+pub mod game;
 // todo:
 // add car names
 // write everything to files (done, but sort it into directories?)

@@ -1,146 +1,112 @@
 // files contains stage names for all 8 countries
 // maybe there is a way better way to match the stagenames
 // (add all car names for groups)
+
 pub mod locations {
-    #[derive(Debug, Clone)]
-    pub enum Finland {}
-    pub enum Sardinia {}
-    pub enum Japan {}
-    pub enum Norway {}
-    pub enum Germany {}
-    pub enum Kenya {}
-    pub enum Indonesia {}
-    pub enum Australia {}
+    use std::collections::HashMap;
 
-    impl Finland {
-        pub fn from_number(stage_number: u8) -> Option<&'static str> {
-            match stage_number {
-                1 => Some("noormarku"),
-                2 => Some("lamppi"),
-                3 => Some("palus"),
-                4 => Some("lassila"),
-                5 => Some("kairila"),
-                6 => Some("haaparjarvi"),
-                _ => None,
-            }
-        }
-    }
-    impl Sardinia {
-        pub fn from_number(stage_number: u8) -> Option<&'static str> {
-            match stage_number {
-                1 => Some("villacidro"),
-                2 => Some("san gavino monreale"),
-                3 => Some("san benedetto"),
-                4 => Some("gennamari"),
-                5 => Some("portu maga"),
-                6 => Some("montevecchio"),
-                _ => None,
-            }
-        }
-    }
-    impl Japan {
-        pub fn from_number(stage_number: u8) -> Option<&'static str> {
-            match stage_number {
-                1 => Some("nasu highland"),
-                2 => Some("mount asama"),
-                3 => Some("mount akagi"),
-                4 => Some("nikko"),
-                5 => Some("tsumagoi"),
-                6 => Some("mount haruna"),
-                _ => None,
-            }
-        }
-    }
-    impl Norway {
-        pub fn from_number(stage_number: u8) -> Option<&'static str> {
-            match stage_number {
-                1 => Some("laupstad"),
-                2 => Some("vestpollen"),
-                3 => Some("stronstad"),
-                4 => Some("kvannkjosen"),
-                5 => Some("grunnfor"),
-                6 => Some("lake Rostavatn"),
-                _ => None,
-            }
-        }
-    }
-    impl Germany {
-        pub fn from_number(stage_number: u8) -> Option<&'static str> {
-            match stage_number {
-                1 => Some("hockweiler"),
-                2 => Some("franzenheim"),
-                3 => Some("holzerath"),
-                4 => Some("farschweiler"),
-                5 => Some("mertesdorf"),
-                6 => Some("gonnesweiler"),
-                _ => None,
-            }
-        }
-    }
-    impl Kenya {
-        pub fn from_number(stage_number: u8) -> Option<&'static str> {
-            match stage_number {
-                1 => Some("mount kenya"),
-                2 => Some("karura"),
-                3 => Some("homa bay"),
-                4 => Some("ndere island"),
-                5 => Some("lake baringo"),
-                6 => Some("lake nakuru"),
-                _ => None,
-            }
-        }
-    }
-    impl Indonesia {
-        pub fn from_number(stage_number: u8) -> Option<&'static str> {
-            match stage_number {
-                1 => Some("mount kawi"),
-                2 => Some("semangka island"),
-                3 => Some("satonda island"),
-                4 => Some("oreng valley"),
-                5 => Some("sangeang island"),
-                6 => Some("kalabakan island"),
-                _ => None,
-            }
-        }
-    }
-    impl Australia {
-        pub fn from_number(stage_number: u8) -> Option<&'static str> {
-            match stage_number {
-                1 => Some("gum scrub"),
-                2 => Some("toorooka"),
-                3 => Some("nulla nulla"),
-                4 => Some("comara canyon"),
-                5 => Some("lake lucernia"),
-                6 => Some("wombamurra"),
-                _ => None,
-            }
-        }
+    pub fn get_name(
+        map: HashMap<&'static str, Vec<&'static str>>,
+        key: &str,
+        index: usize,
+    ) -> Option<&'static str> {
+        let index = index - 1;
+        map.get(key).and_then(|vec| vec.get(index).copied())
     }
 
-    pub enum Countries {
-        Finland,
-        Sardinia,
-        Japan,
-        Norway,
-        Germany,
-        Kenya,
-        Indonesia,
-        Australia,
-    }
+    pub fn get_locations() -> HashMap<&'static str, Vec<&'static str>> {
+        let mut map = HashMap::new();
+        map.insert(
+            "Finland",
+            vec![
+                "noormarku",
+                "lamppi",
+                "palus",
+                "lassila",
+                "kairila",
+                "haaparjarvi",
+            ],
+        );
+        map.insert(
+            "Sardinia",
+            vec![
+                "villacidro",
+                "san gavino monreale",
+                "san benedetto",
+                "gennamari",
+                "portu maga",
+                "montevecchio",
+            ],
+        );
+        map.insert(
+            "Japan",
+            vec![
+                "nasu highland",
+                "mount asama",
+                "mount akagi",
+                "nikko",
+                "tsumagoi",
+                "mount haruna",
+            ],
+        );
+        map.insert(
+            "Norway",
+            vec![
+                "laupstad",
+                "vestpollen",
+                "stronstad",
+                "kvannkjosen",
+                "grunnfor",
+                "lake rostavatn",
+            ],
+        );
+        map.insert(
+            "Germany",
+            vec![
+                "hockweiler",
+                "franzenheim",
+                "holzerath",
+                "farschweiler",
+                "mertesdorf",
+                "gonnesweiler",
+            ],
+        );
 
-    impl Countries {
-        pub fn from_str(location: &str) -> Option<Countries> {
-            match location {
-                "Finland" => Some(Countries::Finland),
-                "Sardinia" => Some(Countries::Sardinia),
-                "Japan" => Some(Countries::Japan),
-                "Norway" => Some(Countries::Norway),
-                "Germany" => Some(Countries::Germany),
-                "Kenya" => Some(Countries::Kenya),
-                "Indonesia" => Some(Countries::Indonesia),
-                "Australia" => Some(Countries::Australia),
-                _ => None,
-            }
-        }
+        map.insert(
+            "Kenya",
+            vec![
+                "mount kenya",
+                "karura",
+                "homa bay",
+                "ndere island",
+                "lake baringo",
+                "lake nakuru",
+            ],
+        );
+
+        map.insert(
+            "Indonesia",
+            vec![
+                "mount kawi",
+                "semangka island",
+                "satonda island",
+                "oreng valley",
+                "sangeang island",
+                "kalabakan island",
+            ],
+        );
+
+        map.insert(
+            "Australia",
+            vec![
+                "gum scrub",
+                "toorooka",
+                "nulla nulla",
+                "comara canyon",
+                "lake lucernia",
+                "wombamurra",
+            ],
+        );
+        map
     }
 }

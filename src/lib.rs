@@ -5,7 +5,7 @@ use std::path::Path;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 mod game;
-use game::locations::*;
+use game::locations;
 
 #[derive(Debug, Clone)]
 #[allow(dead_code)]
@@ -15,7 +15,7 @@ pub struct Stage {
     car: u8,
     player_name: String,
     location: String,
-    stage_number: u8,
+    stage_number: usize,
     stage_name: String,
     direction: String,
     weather: String,
@@ -71,19 +71,15 @@ impl Stage {
             let car = parts[2].parse().ok()?;
             let location_parts: Vec<&str> = parts[0].split("_").collect();
             let location = location_parts[0];
-            let stage_number: u8 = location_parts[2].parse().ok()?;
+            let stage_number: usize = location_parts[2].parse().ok()?;
             let group = location_parts[5].to_string();
-            let location_enum = Countries::from_str(location)?;
-            let stage_name = match location_enum {
-                Countries::Finland => Finland::from_number(stage_number),
-                Countries::Sardinia => Sardinia::from_number(stage_number),
-                Countries::Japan => Japan::from_number(stage_number),
-                Countries::Norway => Norway::from_number(stage_number),
-                Countries::Germany => Germany::from_number(stage_number),
-                Countries::Kenya => Kenya::from_number(stage_number),
-                Countries::Indonesia => Indonesia::from_number(stage_number),
-                Countries::Australia => Australia::from_number(stage_number),
-            }?;
+            let stages = locations::get_locations();
+            let value = locations::get_name(stages, &location, stage_number);
+            let stage_name = match value {
+                Some(val) => val,
+                None => return None,
+            };
+
             let direction = location_parts[3].to_string();
             let weather = location_parts[4].to_string();
 
