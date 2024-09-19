@@ -5,13 +5,13 @@
 pub mod locations {
     use std::collections::HashMap;
 
-    pub fn get_name(
-        map: HashMap<&'static str, Vec<&'static str>>,
+    pub fn get_name<'a>(
+        map: &'a HashMap<&'static str, Vec<&'static str>>,
         key: &str,
         index: usize,
     ) -> Option<&'static str> {
         let index = index - 1;
-        map.get(key).and_then(|vec| vec.get(index).copied())
+        map.get(key).and_then(|vec| vec.get(index)).map(|&s| s)
     }
 
     pub fn get_locations() -> HashMap<&'static str, Vec<&'static str>> {

@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::fs::{self, DirBuilder, File};
 use std::io::{self, Write};
+use std::num::NonZeroUsize;
 use std::path::Path;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
@@ -26,7 +27,7 @@ pub struct Stage {
 pub struct Player {
     name: String,
     score: u32,
-    rankings: HashMap<String, u64>,
+    pub rankings: HashMap<String, u64>,
     stages: HashMap<String, Stage>,
 }
 
@@ -42,8 +43,8 @@ impl Player {
     pub fn get_average_score(&self) -> u64 {
         let mut score: u64 = 0;
         let mut len = 0;
-        for (_h, v) in &self.rankings {
-            score += v;
+        for (_name, stage_score) in &self.rankings {
+            score += stage_score;
             len += 1;
         }
         if len == 0 {
@@ -71,12 +72,11 @@ impl Stage {
             let car = parts[2].parse().ok()?;
             let location_parts: Vec<&str> = parts[0].split("_").collect();
             let location = location_parts[0];
-            let stage_number: usize = location_parts[2].parse().ok()?;
+            let stage_number: NonZeroUsize = location_parts[2].parse().ok()?;
             let group = location_parts[5].to_string();
-            let stages = locations::get_locations();
-            let value = locations::get_name(stages, &location, stage_number);
-            let stage_name = match value {
-                Some(val) => val,
+            let locations = locations::get_locations();
+            let stage_name = match locations::get_name(&locations, &location, stage_number.into()) {
+                Some(name) => name,
                 None => return None,
             };
 
@@ -89,7 +89,7 @@ impl Stage {
                 car,
                 player_name: player_name.to_string(),
                 location: location.to_string(),
-                stage_number,
+                stage_number: stage_number.into(),
                 stage_name: stage_name.to_string(),
                 direction,
                 weather,
@@ -142,18 +142,6 @@ pub fn load_users_from_dir(dir: &Path) -> io::Result<Vec<Player>> {
     Ok(players)
 }
 
-// best rust code ever
-pub fn _load_all_stages() -> Vec<String> {
-    let contents = fs::read_to_string("Leaderboards.txt").unwrap();
-    let lines: Vec<String> = contents.lines().map(String::from).collect();
-    let mut stage_names: Vec<String> = Vec::new();
-    for line in lines {
-        let parts: Vec<&str> = line.split(":").collect();
-        stage_names.push(parts[0].to_owned());
-    }
-    stage_names
-}
-
 pub fn collect_stages_from_players(players: &[Player]) -> HashMap<String, Vec<Stage>> {
     let mut every_stage: HashMap<String, Vec<Stage>> = HashMap::new();
 
@@ -180,7 +168,6 @@ pub fn get_ranked_stages(
     for (stage_name, stages) in every_stage.iter() {
         if let Some(fastest_stage) = stages.first() {
             let fastest_time = fastest_stage.time as f64;
-            // update player scores
             for (pos, stage) in stages.iter().enumerate() {
                 let rank: i32 = pos as i32 + 1;
                 let player_time = stage.time as f64;
@@ -214,7 +201,6 @@ pub fn get_ranked_stages(
                         .entry(stage_key)
                         .or_insert(Vec::new())
                         .push(player_value);
-                    // file for every single stage here? -> extra function
                 }
             }
         }
@@ -222,7 +208,7 @@ pub fn get_ranked_stages(
     ranked_stages
 }
 
-pub fn create_single_leaderboards(single_leaderboards: HashMap<String, Vec<String>>) {
+pub fn create_single_leaderboards(single_leaderboards: &HashMap<String, Vec<String>>) {
     for (k, v) in single_leaderboards.iter() {
         let mut text: Vec<String> = Vec::new();
         text.push(format!("{}", k));
@@ -240,7 +226,7 @@ pub fn get_leaderboard(players: &mut Vec<Player>) -> Vec<String> {
             .partial_cmp(&a.score)
             .unwrap_or(std::cmp::Ordering::Equal)
     });
-    let mut string: Vec<String> = Vec::new();
+    let mut leaderboard = Vec::new();
     for (rank, player) in players.iter().enumerate() {
         let s = format!(
             "{}: {} \t{:.2} points\t({})",
@@ -249,9 +235,28 @@ pub fn get_leaderboard(players: &mut Vec<Player>) -> Vec<String> {
             player.score,
             player.get_average_score()
         );
-        string.push(s);
+        leaderboard.push(s);
     }
-    string
+    leaderboard
+}
+
+// shitty code to test stuff
+// create one leaderboard for every group
+pub fn create_group_leaderboards(players: &Vec<Player>) -> HashMap<&str, HashMap<&str, u64>> {
+    let mut groups: HashMap<&str, HashMap<&str, u64>> = HashMap::new();
+
+    for player in players {
+        for (stage_name, points) in &player.rankings {
+            let parts: Vec<&str> = stage_name.split("_").collect();
+            let group = parts[5];
+            let country_group = groups.entry(group).or_insert(HashMap::new());
+            country_group
+                .entry(&player.name)
+                .and_modify(|score| *score += *points)
+                .or_insert(*points);
+        }
+    }
+    groups
 }
 
 pub fn create_folder(path: &str) {
