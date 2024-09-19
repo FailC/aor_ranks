@@ -22,7 +22,7 @@ generated leaderboards look the best when the player files are renamed to userna
 
 #### project structure
 
-create a user_files directory, and move player.txt files into it (directory can be any name)
+create a user_files directory, and move all the text files into it (directory can be any name)
 
 ```plaintext
 aor_ranks/
