@@ -36,20 +36,11 @@ fn main() -> io::Result<()> {
         get_ranked_stages(&stages, &mut players);
     let leaderboard: Vec<String> = get_leaderboard(&mut players);
 
-    // testing group leaderboards
-    // TODO: create files instead of printing
-    let board = create_group_leaderboards(&players);
-    for (group, players) in board {
-        println!("{}", group);
-        for (name, score) in players {
-            println!("{} : {}", name, score);
-        }
-    }
-
     create_folder("./Leaderboards");
     create_folder("./Leaderboards/all_stages");
-    //create_folder(".Leaderboards/groups");
-    //
+    create_folder("./Leaderboards/groups");
+
+    create_group_leaderboards(&players);
     std::io::stdout().flush().expect("Failed to flush stdout");
     let _ = create_file("./Leaderboards", leaderboard, "ranks")
         .map_err(|err| eprintln!("ERROR: failed to create file: {err}"));

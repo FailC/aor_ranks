@@ -242,7 +242,7 @@ pub fn get_leaderboard(players: &mut Vec<Player>) -> Vec<String> {
 
 // shitty code to test stuff
 // create one leaderboard for every group
-pub fn create_group_leaderboards(players: &Vec<Player>) -> HashMap<&str, HashMap<&str, u64>> {
+pub fn create_group_leaderboards(players: &Vec<Player>) {
     let mut groups: HashMap<&str, HashMap<&str, u64>> = HashMap::new();
 
     for player in players {
@@ -256,7 +256,18 @@ pub fn create_group_leaderboards(players: &Vec<Player>) -> HashMap<&str, HashMap
                 .or_insert(*points);
         }
     }
-    groups
+    for (group, players) in groups {
+        let mut content = Vec::new();
+        let file_name: &str = group;
+
+        let mut sorted_vec: Vec<(&str, u64)> = players.iter().map(|(&k, &v)| (k, v)).collect();
+        sorted_vec.sort_by(|a, b| b.1.cmp(&a.1));
+
+        for e in sorted_vec {
+            content.push(format!("{} : {}", e.0, e.1));
+        }
+        create_file("./Leaderboards/groups", content, file_name).unwrap();
+    }
 }
 
 pub fn create_folder(path: &str) {
