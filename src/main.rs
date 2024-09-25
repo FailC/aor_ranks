@@ -7,7 +7,6 @@ use std::path::Path;
 pub mod game;
 // TODO:
 // add car names
-// write everything to files (done, but sort it into directories?)
 // calculating average position too, average score done
 
 fn main() -> io::Result<()> {
@@ -32,13 +31,14 @@ fn main() -> io::Result<()> {
 
     let stages: HashMap<String, Vec<Stage>> = collect_stages_from_players(&players);
 
-    let single_leaderboards: HashMap<String, Vec<String>> =
-        get_ranked_stages(&stages, &mut players);
-    let leaderboard: Vec<String> = get_leaderboard(&mut players);
-
     create_folder("./Leaderboards");
     create_folder("./Leaderboards/all_stages");
     create_folder("./Leaderboards/groups");
+    print!("generating files..");
+    std::io::stdout().flush().expect("Failed to flush stdout");
+    let single_leaderboards: HashMap<String, Vec<String>> =
+        get_ranked_stages(&stages, &mut players);
+    let leaderboard: Vec<String> = get_leaderboard(&mut players);
 
     create_group_leaderboards(&players);
     std::io::stdout().flush().expect("Failed to flush stdout");
@@ -49,8 +49,8 @@ fn main() -> io::Result<()> {
     // split up into country directories?
     create_single_leaderboards(&single_leaderboards);
 
-    println!("files created: {:?}", COUNTER);
-
+    // println!("files created: {:?}", COUNTER);
+    println!("done");
     Ok(())
 }
 
@@ -62,14 +62,20 @@ mod tests {
     use std::time::Instant;
 
     #[test]
+    // changed to static variable instead of running get_locations() every time a Stage gets
+    // created
     fn test_get_locations_timing() {
+        let count = 500;
         let start_time = Instant::now();
-        for _ in 0..1_000_000 {
+        for _ in 0..count {
             let _locations = game::locations::get_locations();
         }
         let duration = start_time.elapsed();
 
         // cargo test -- --show-output
-        println!("Time taken to execute get_locations: {:?}", duration);
+        println!(
+            "Time taken to execute get_locations {} times: {:?}",
+            count, duration
+        );
     }
 }

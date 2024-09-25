@@ -23,7 +23,7 @@ pub struct Stage {
     group: String,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Player {
     name: String,
     score: u32,
@@ -71,12 +71,13 @@ impl Stage {
             let name = parts[0].to_string();
             let car = parts[2].parse().ok()?;
             let location_parts: Vec<&str> = parts[0].split("_").collect();
-            let location = location_parts[0];
+            let location = location_parts[0].to_string();
             let stage_number: NonZeroUsize = location_parts[2].parse().ok()?;
             let group = location_parts[5].to_string();
-            let locations = locations::get_locations();
+            // most optimized Rust code ever
+            let locations = &game::locations::LOCATIONS;
             let stage_name = match locations::get_name(&locations, &location, stage_number.into()) {
-                Some(name) => name,
+                Some(name) => name.to_string(),
                 None => return None,
             };
 
@@ -88,9 +89,9 @@ impl Stage {
                 time,
                 car,
                 player_name: player_name.to_string(),
-                location: location.to_string(),
+                location,
                 stage_number: stage_number.into(),
-                stage_name: stage_name.to_string(),
+                stage_name,
                 direction,
                 weather,
                 group,
@@ -107,7 +108,6 @@ impl Stage {
         return format!("{minutes:02}:{seconds:02}:{milliseconds:03}");
     }
 }
-
 pub fn read_stages_from_file(path: &Path, player_name: &str) -> io::Result<HashMap<String, Stage>> {
     let mut stages = HashMap::new();
     let content = fs::read_to_string(path)?;
@@ -131,17 +131,15 @@ pub fn load_users_from_dir(dir: &Path) -> io::Result<Vec<Player>> {
             let player_name = path
                 .file_stem()
                 .and_then(|name| name.to_str())
-                .unwrap_or("Unknown")
-                .to_string();
+                .unwrap_or("Unknown");
 
-            if let Ok(stages) = read_stages_from_file(&path, &player_name) {
-                players.push(Player::new(player_name, stages))
+            if let Ok(stages) = read_stages_from_file(&path, player_name) {
+                players.push(Player::new(player_name.to_string(), stages))
             }
         }
     }
     Ok(players)
 }
-
 pub fn collect_stages_from_players(players: &[Player]) -> HashMap<String, Vec<Stage>> {
     let mut every_stage: HashMap<String, Vec<Stage>> = HashMap::new();
 
@@ -164,7 +162,6 @@ pub fn get_ranked_stages(
     players: &mut Vec<Player>,
 ) -> HashMap<String, Vec<String>> {
     let mut ranked_stages: HashMap<String, Vec<String>> = HashMap::new();
-
     for (stage_name, stages) in every_stage.iter() {
         if let Some(fastest_stage) = stages.first() {
             let fastest_time = fastest_stage.time as f64;
@@ -215,7 +212,7 @@ pub fn create_single_leaderboards(single_leaderboards: &HashMap<String, Vec<Stri
         for y in v {
             text.push(format!("{}", y));
         }
-        let _ = create_file("./Leaderboards/all_stages", text.clone(), k).unwrap();
+        create_file("./Leaderboards/all_stages", text, k).unwrap();
     }
 }
 
@@ -256,17 +253,19 @@ pub fn create_group_leaderboards(players: &Vec<Player>) {
                 .or_insert(*points);
         }
     }
+    // sort player score in each group
     for (group, players) in groups {
-        let mut content = Vec::new();
+        let mut file_content = Vec::new();
         let file_name: &str = group;
 
         let mut sorted_vec: Vec<(&str, u64)> = players.iter().map(|(&k, &v)| (k, v)).collect();
         sorted_vec.sort_by(|a, b| b.1.cmp(&a.1));
 
-        for e in sorted_vec {
-            content.push(format!("{} : {}", e.0, e.1));
+        for x in sorted_vec {
+            file_content.push(format!("{}: {}", x.0, x.1));
         }
-        create_file("./Leaderboards/groups", content, file_name).unwrap();
+        create_file("./Leaderboards/groups", file_content, file_name)
+            .expect("failed to create file in create_group_leaderboards");
     }
 }
 
@@ -277,16 +276,19 @@ pub fn create_folder(path: &str) {
         Err(_) => println!("directory exists: {}", path),
     };
 }
-
 // Counter for some debugging i guess
 pub static COUNTER: AtomicUsize = AtomicUsize::new(0);
-pub fn create_file(dir_path: &str, text: Vec<String>, file_name: &str) -> std::io::Result<()> {
+pub fn create_file<T: AsRef<str>>(
+    dir_path: &str,
+    text: Vec<T>,
+    file_name: &str,
+) -> std::io::Result<()> {
     //let dir_path = "./Leaderboards";
     let file_path = Path::new(dir_path).join(file_name);
     let mut file = File::create(&file_path)?;
 
     for x in text {
-        file.write_all(x.as_bytes())?;
+        file.write_all(x.as_ref().as_bytes())?;
         file.write_all("\n".as_bytes())?;
     }
     COUNTER.fetch_add(1, Ordering::SeqCst);

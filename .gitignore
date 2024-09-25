@@ -2,3 +2,5 @@
 /Leaderboards.txt
 /user_files
 /Leaderboards
+/flamegraph*
+/perf.data*

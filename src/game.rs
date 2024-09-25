@@ -3,7 +3,11 @@
 // (add all car names for groups)
 
 pub mod locations {
+    use once_cell::sync::Lazy;
     use std::collections::HashMap;
+
+    pub static LOCATIONS: Lazy<HashMap<&'static str, Vec<&'static str>>> =
+        Lazy::new(|| get_locations());
 
     pub fn get_name<'a>(
         map: &'a HashMap<&'static str, Vec<&'static str>>,
