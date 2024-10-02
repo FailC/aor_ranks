@@ -26,7 +26,8 @@ fn main() -> io::Result<()> {
     print!("loading files..");
     std::io::stdout().flush().expect("Failed to flush stdout");
 
-    let mut players: Vec<Player> = load_users_from_dir(dir_path)?;
+    // let mut players: Vec<Player> = load_users_from_dir(dir_path)?;
+    let mut players = load_users_from_dir(dir_path)?;
     println!("{} players", players.len());
 
     let stages: HashMap<String, Vec<Stage>> = collect_stages_from_players(&players);

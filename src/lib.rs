@@ -119,8 +119,9 @@ pub fn read_stages_from_file(path: &Path, player_name: &str) -> io::Result<HashM
     Ok(stages)
 }
 
-pub fn load_users_from_dir(dir: &Path) -> io::Result<Vec<Player>> {
-    let mut players: Vec<Player> = Vec::new();
+pub fn load_users_from_dir(dir: &Path) -> io::Result<HashMap<String, Player>> {
+    // let mut players: Vec<Player> = Vec::new();
+    let mut players: HashMap<String, Player> = HashMap::new();
 
     for entry in fs::read_dir(dir)? {
         let entry = entry?;
@@ -134,16 +135,22 @@ pub fn load_users_from_dir(dir: &Path) -> io::Result<Vec<Player>> {
                 .unwrap_or("Unknown");
 
             if let Ok(stages) = read_stages_from_file(&path, player_name) {
-                players.push(Player::new(player_name.to_string(), stages))
+                // players.push(Player::new(player_name.to_string(), stages))
+                players.insert(
+                    player_name.to_string(),
+                    Player::new(player_name.to_string(), stages),
+                );
             }
         }
     }
     Ok(players)
 }
-pub fn collect_stages_from_players(players: &[Player]) -> HashMap<String, Vec<Stage>> {
+pub fn collect_stages_from_players(
+    players: &HashMap<String, Player>,
+) -> HashMap<String, Vec<Stage>> {
     let mut every_stage: HashMap<String, Vec<Stage>> = HashMap::new();
 
-    for player in players {
+    for player in players.values() {
         for stage in player.stages.values() {
             every_stage
                 .entry(stage.name.clone())
@@ -159,7 +166,7 @@ pub fn collect_stages_from_players(players: &[Player]) -> HashMap<String, Vec<St
 
 pub fn get_ranked_stages(
     every_stage: &HashMap<String, Vec<Stage>>,
-    players: &mut Vec<Player>,
+    players: &mut HashMap<String, Player>,
 ) -> HashMap<String, Vec<String>> {
     let mut ranked_stages: HashMap<String, Vec<String>> = HashMap::new();
     for (stage_name, stages) in every_stage.iter() {
@@ -172,7 +179,9 @@ pub fn get_ranked_stages(
                 let score =
                     1000.0 * (fastest_time / player_time) * 0.988f64.powf(rank as f64 - 1.0);
                 // Find player and update score
-                if let Some(player) = players.iter_mut().find(|p| p.name == stage.player_name) {
+                //if let Some(player) = players.get_mut(&stage.player_name)
+                // if let Some(player) = players.iter_mut().find(|p| p.name == stage.player_name) {
+                if let Some(player) = players.get_mut(&stage.player_name) {
                     player.score += score as u32;
                     player
                         .rankings
@@ -216,15 +225,20 @@ pub fn create_single_leaderboards(single_leaderboards: &HashMap<String, Vec<Stri
     }
 }
 
-pub fn get_leaderboard(players: &mut Vec<Player>) -> Vec<String> {
-    // Sort players by score in descending order
-    players.sort_by(|a, b| {
+pub fn get_leaderboard(players: &HashMap<String, Player>) -> Vec<String> {
+    // Collect all players into a Vec so that we can sort them
+    let mut players_vec: Vec<&Player> = players.values().collect();
+
+    // Sort the players by score in descending order
+    players_vec.sort_by(|a, b| {
         b.score
             .partial_cmp(&a.score)
             .unwrap_or(std::cmp::Ordering::Equal)
     });
+
+    // Create the leaderboard output
     let mut leaderboard = Vec::new();
-    for (rank, player) in players.iter().enumerate() {
+    for (rank, player) in players_vec.iter().enumerate() {
         let s = format!(
             "{}: {} \t{:.2} points\t({})",
             rank + 1,
@@ -234,19 +248,23 @@ pub fn get_leaderboard(players: &mut Vec<Player>) -> Vec<String> {
         );
         leaderboard.push(s);
     }
+
     leaderboard
 }
 
 // shitty code to test stuff
 // create one leaderboard for every group
-pub fn create_group_leaderboards(players: &Vec<Player>) {
+pub fn create_group_leaderboards(players: &HashMap<String, Player>) {
     let mut groups: HashMap<&str, HashMap<&str, u64>> = HashMap::new();
 
-    for player in players {
+    // Iterate over the players in the HashMap
+    for player in players.values() {
         for (stage_name, points) in &player.rankings {
-            let parts: Vec<&str> = stage_name.split("_").collect();
+            let parts: Vec<&str> = stage_name.split('_').collect();
             let group = parts[5];
-            let country_group = groups.entry(group).or_insert(HashMap::new());
+
+            let country_group = groups.entry(group).or_insert_with(HashMap::new);
+
             country_group
                 .entry(&player.name)
                 .and_modify(|score| *score += *points)
@@ -258,10 +276,10 @@ pub fn create_group_leaderboards(players: &Vec<Player>) {
         let mut file_content = Vec::new();
         let file_name: &str = group;
 
-        let mut sorted_vec: Vec<(&str, u64)> = players.iter().map(|(&k, &v)| (k, v)).collect();
-        sorted_vec.sort_by(|a, b| b.1.cmp(&a.1));
+        let mut sorted_group: Vec<(&str, u64)> = players.iter().map(|(&k, &v)| (k, v)).collect();
+        sorted_group.sort_by(|a, b| b.1.cmp(&a.1));
 
-        for x in sorted_vec {
+        for x in sorted_group {
             file_content.push(format!("{}: {}", x.0, x.1));
         }
         create_file("./Leaderboards/groups", file_content, file_name)
