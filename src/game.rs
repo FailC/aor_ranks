@@ -6,11 +6,11 @@ pub mod locations {
     use once_cell::sync::Lazy;
     use std::collections::HashMap;
 
-    pub static LOCATIONS: Lazy<HashMap<&'static str, Vec<&'static str>>> =
+    pub static LOCATIONS: Lazy<HashMap<&'static str, [&'static str; 6]>> =
         Lazy::new(|| get_locations());
 
     pub fn get_name<'a>(
-        map: &'a HashMap<&'static str, Vec<&'static str>>,
+        map: &'a HashMap<&'static str, [&'static str; 6]>,
         key: &str,
         index: usize,
     ) -> Option<&'static str> {
@@ -18,11 +18,11 @@ pub mod locations {
         map.get(key).and_then(|vec| vec.get(index)).map(|&s| s)
     }
 
-    pub fn get_locations() -> HashMap<&'static str, Vec<&'static str>> {
+    pub fn get_locations() -> HashMap<&'static str, [&'static str; 6]> {
         let mut map = HashMap::new();
         map.insert(
             "Finland",
-            vec![
+            [
                 "noormarku",
                 "lamppi",
                 "palus",
@@ -33,7 +33,7 @@ pub mod locations {
         );
         map.insert(
             "Sardinia",
-            vec![
+            [
                 "villacidro",
                 "san gavino monreale",
                 "san benedetto",
@@ -44,7 +44,7 @@ pub mod locations {
         );
         map.insert(
             "Japan",
-            vec![
+            [
                 "nasu highland",
                 "mount asama",
                 "mount akagi",
@@ -55,7 +55,7 @@ pub mod locations {
         );
         map.insert(
             "Norway",
-            vec![
+            [
                 "laupstad",
                 "vestpollen",
                 "stronstad",
@@ -66,7 +66,7 @@ pub mod locations {
         );
         map.insert(
             "Germany",
-            vec![
+            [
                 "hockweiler",
                 "franzenheim",
                 "holzerath",
@@ -78,7 +78,7 @@ pub mod locations {
 
         map.insert(
             "Kenya",
-            vec![
+            [
                 "mount kenya",
                 "karura",
                 "homa bay",
@@ -90,7 +90,7 @@ pub mod locations {
 
         map.insert(
             "Indonesia",
-            vec![
+            [
                 "mount kawi",
                 "semangka island",
                 "satonda island",
@@ -102,7 +102,7 @@ pub mod locations {
 
         map.insert(
             "Australia",
-            vec![
+            [
                 "gum scrub",
                 "toorooka",
                 "nulla nulla",
