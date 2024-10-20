@@ -39,7 +39,7 @@ fn main() -> io::Result<()> {
     std::io::stdout().flush().expect("Failed to flush stdout");
     let single_leaderboards: HashMap<String, Vec<String>> =
         get_ranked_stages(&stages, &mut players);
-    let leaderboard: Vec<String> = get_leaderboard(&mut players);
+    let leaderboard: Vec<String> = get_leaderboard(&players);
 
     create_group_leaderboards(&players);
     std::io::stdout().flush().expect("Failed to flush stdout");

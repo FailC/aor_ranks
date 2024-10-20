@@ -43,7 +43,7 @@ impl Player {
     pub fn get_average_score(&self) -> u64 {
         let mut score: u64 = 0;
         let mut len = 0;
-        for (_name, stage_score) in &self.rankings {
+        for stage_score in self.rankings.values() {
             score += stage_score;
             len += 1;
         }
@@ -58,10 +58,11 @@ impl Stage {
     pub fn from_line(line: &str, player_name: &str) -> Option<Self> {
         let parts: Vec<&str> = line.split(':').collect();
         // check for daily, weekly events / for now filter out bonus cars / include Australia DLC?
-        if parts.len() == 3
-            && !parts[0].contains("Custom")
-            && !parts[0].contains("Bonus")
-            && !(parts[0].contains("daily") || parts[0].contains("weekly"))
+        if !(parts.len() != 3
+            || parts[0].contains("Custom")
+            || parts[0].contains("Bonus")
+            || parts[0].contains("daily")
+            || parts[0].contains("weekly"))
         {
             let time = parts[1].parse().ok()?;
             // return early because of DNF time
@@ -70,13 +71,13 @@ impl Stage {
             }
             let name = parts[0].to_string();
             let car = parts[2].parse().ok()?;
-            let location_parts: Vec<&str> = parts[0].split("_").collect();
+            let location_parts: Vec<&str> = parts[0].split('_').collect();
             let location = location_parts[0].to_string();
             let stage_number: NonZeroUsize = location_parts[2].parse().ok()?;
             let group = location_parts[5].to_string();
             // most optimized Rust code ever
             let locations = &game::locations::LOCATIONS;
-            let stage_name = match locations::get_name(&locations, &location, stage_number.into()) {
+            let stage_name = match locations::get_name(locations, &location, stage_number.into()) {
                 Some(name) => name.to_string(),
                 None => return None,
             };
@@ -105,7 +106,7 @@ impl Stage {
         let minutes = total_seconds / 60;
         let seconds = total_seconds % 60;
         let milliseconds = self.time % 1000;
-        return format!("{minutes:02}:{seconds:02}:{milliseconds:03}");
+        format!("{minutes:02}:{seconds:02}:{milliseconds:03}")
     }
 }
 pub fn read_stages_from_file(path: &Path, player_name: &str) -> io::Result<HashMap<String, Stage>> {
@@ -154,7 +155,7 @@ pub fn collect_stages_from_players(
         for stage in player.stages.values() {
             every_stage
                 .entry(stage.name.clone())
-                .or_insert_with(Vec::new)
+                .or_default()
                 .push(stage.clone());
         }
     }
@@ -205,7 +206,7 @@ pub fn get_ranked_stages(
                     );
                     ranked_stages
                         .entry(stage_key)
-                        .or_insert(Vec::new())
+                        .or_default()
                         .push(player_value);
                 }
             }
@@ -217,9 +218,9 @@ pub fn get_ranked_stages(
 pub fn create_single_leaderboards(single_leaderboards: &HashMap<String, Vec<String>>) {
     for (k, v) in single_leaderboards.iter() {
         let mut text: Vec<String> = Vec::new();
-        text.push(format!("{}", k));
+        text.push(k.to_string());
         for y in v {
-            text.push(format!("{}", y));
+            text.push(y.to_string());
         }
         create_file("./Leaderboards/all_stages", text, k).unwrap();
     }
@@ -263,7 +264,7 @@ pub fn create_group_leaderboards(players: &HashMap<String, Player>) {
             let parts: Vec<&str> = stage_name.split('_').collect();
             let group = parts[5];
 
-            let country_group = groups.entry(group).or_insert_with(HashMap::new);
+            let country_group = groups.entry(group).or_default();
 
             country_group
                 .entry(&player.name)
@@ -303,7 +304,7 @@ pub fn create_file<T: AsRef<str>>(
 ) -> std::io::Result<()> {
     //let dir_path = "./Leaderboards";
     let file_path = Path::new(dir_path).join(file_name);
-    let mut file = File::create(&file_path)?;
+    let mut file = File::create(file_path)?;
 
     for x in text {
         file.write_all(x.as_ref().as_bytes())?;

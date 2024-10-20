@@ -6,16 +6,15 @@ pub mod locations {
     use once_cell::sync::Lazy;
     use std::collections::HashMap;
 
-    pub static LOCATIONS: Lazy<HashMap<&'static str, [&'static str; 6]>> =
-        Lazy::new(|| get_locations());
+    pub static LOCATIONS: Lazy<HashMap<&'static str, [&'static str; 6]>> = Lazy::new(get_locations);
 
-    pub fn get_name<'a>(
-        map: &'a HashMap<&'static str, [&'static str; 6]>,
+    pub fn get_name(
+        map: &HashMap<&'static str, [&'static str; 6]>,
         key: &str,
         index: usize,
     ) -> Option<&'static str> {
         let index = index - 1;
-        map.get(key).and_then(|vec| vec.get(index)).map(|&s| s)
+        map.get(key).and_then(|vec| vec.get(index).copied())
     }
 
     pub fn get_locations() -> HashMap<&'static str, [&'static str; 6]> {
